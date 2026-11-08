@@ -1,25 +1,19 @@
-# DJ SEBAS AI MUSIC STUDIO
+# DJ SEBAS AI MUSIC STUDIO PRO 3.0
 
-Aplicación web instalable (PWA) para Android y escritorio. La mezcla de archivos locales se procesa en el navegador; no requiere cuenta, clave de OpenAI, Hugging Face, tarjeta ni suscripción.
+Versión Android independiente de PRO 2.0. Identificador de paquete propio: `com.produccionessebas.djsebasmusicstudiopro30`. Ambas aplicaciones podrán instalarse juntas.
 
-## Funciones actuales
-- Usar el generador oficial ACE-Step 1.5 integrado en la pantalla mediante un marco web (la generación se ejecuta en Hugging Face y está sujeta a su cola y límites).
-- Preparar prompts de canción con género, ambiente, voz, duración y letra.
-- Importar dos archivos de audio desde el dispositivo.
-- Reproducir/escuchar los originales.
-- Crear transición crossfade, superposición tipo mashup o reproducción A seguida de B.
-- Descargar el audio generado en ACE-Step y cargarlo en el mezclador local para producir y exportar el mashup.
-- Ajustar volumen de ambas pistas.
-- Escuchar el resultado y exportarlo como WAV.
-- Interfaz instalable como PWA y caché de la interfaz para uso sin conexión después de la primera visita.
+## Alcance PRO 3.0
+- Conserva la cabina local de dos pistas, mezcla, crossfade, mashup, BPM y ecualización de la versión anterior.
+- Remix automático de una sola canción: detección aproximada de BPM, ajuste de tempo limitado, perfiles Club/Cumbia/Electro/Limpio, compresión y eco.
+- Exportación MP3 a 192 kbps.
+- En APK Android, guardar automáticamente en `Music/DJ SEBAS PRO 3.0/` mediante MediaStore; la carpeta será visible desde Archivos y reproductores de música.
+- El procesamiento de audio local no necesita clave de OpenAI, tarjeta, suscripción ni conexión.
+- Se excluye la incorporación de nuevas funciones de generación musical por IA en esta versión; ACE-Step existente no se amplía.
 
-## Límites conocidos
-La versión actual no hace análisis automático de BPM/tonalidad, beatmatching, separación de voces/instrumentos ni composición generativa con IA. La exportación WAV usa memoria del dispositivo; se recomienda probar primero con canciones cortas.
+## Construcción
+GitHub Actions ejecuta `.github/workflows/android-pro3.yml` en la rama `pro-3.0`. El artefacto se publica como `DJ-SEBAS-AI-MUSIC-STUDIO-PRO-3.0-APK`.
 
-## Instalar
-Abre la web publicada en Chrome Android, menú ⋮ → Instalar aplicación (o Agregar a pantalla principal).
-
-## Privacidad
-Los archivos se leen localmente con Web Audio API y no se envían a un servidor.
+## Nota de alcance
+Esta primera iteración incorpora la exportación MP3 y el remix automático de una pista junto con la base de mezcla actual. El editor multipista completo, la biblioteca indexada y controles de efectos avanzados adicionales requieren implementación y pruebas posteriores antes de anunciarlos como terminados.
 
 DJ SEBAS · Producciones Sebas
