@@ -9,6 +9,7 @@ on:
       - 'sw.js'
       - 'package.json'
       - 'capacitor.config.json'
+      - 'capacitor.config.json'
       - '.github/workflows/android-apk.yml'
     branches: [main]
 permissions:
@@ -68,7 +69,7 @@ jobs:
       - name: Publicar APK descargable
         uses: actions/upload-artifact@v4
         with:
-          name: DJ-SEBAS-AI-MUSIC-STUDIO-APK
+          name: DJ-SEBAS-AI-MUSIC-STUDIO-PRO-2.0-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
