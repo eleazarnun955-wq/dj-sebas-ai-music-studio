@@ -56,6 +56,8 @@ jobs:
           npx cap sync android
           # Descarga la distribución mínima y amplía el tiempo de espera del wrapper.
           sed -i 's/gradle-8.11.1-all.zip/gradle-8.11.1-bin.zip/' android/gradle/wrapper/gradle-wrapper.properties
+          # Evita la redirección de services.gradle.org hacia GitHub (HTTP 504).
+          sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties
           echo 'networkTimeout=120000' >> android/gradle/wrapper/gradle-wrapper.properties
       - name: Construir APK de Android
         working-directory: android
