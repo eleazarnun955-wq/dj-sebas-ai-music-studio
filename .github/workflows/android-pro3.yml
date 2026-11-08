@@ -5,6 +5,8 @@ on:
     branches: [pro-3.0]
     paths:
       - 'index.html'
+      - 'manifest.webmanifest'
+      - 'sw.js'
       - 'package.json'
       - 'capacitor.config.json'
       - 'android-native/**'
