@@ -1,11 +1,12 @@
 {
-  "name": "dj-sebas-ai-music-studio",
-  "version": "2.0.0",
+  "name": "dj-sebas-ai-music-studio-pro-3",
+  "version": "3.0.0",
   "private": true,
-  "description": "DJ SEBAS AI MUSIC STUDIO PRO 2.0 - cabina DJ avanzada y mezclador local",
+  "description": "DJ SEBAS AI MUSIC STUDIO PRO 3.0 - cabina DJ, remix automático y exportación MP3",
   "dependencies": {
     "@capacitor/android": "7.4.3",
-    "@capacitor/core": "7.4.3"
+    "@capacitor/core": "7.4.3",
+    "lamejs": "1.2.1"
   },
   "devDependencies": {
     "@capacitor/cli": "7.4.3"
