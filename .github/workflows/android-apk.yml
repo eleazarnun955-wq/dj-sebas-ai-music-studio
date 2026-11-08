@@ -38,7 +38,7 @@ jobs:
           html = open('index.html', encoding='utf-8').read()
           scripts = re.findall(r'<script>(.*?)</script>', html, re.S)
           assert scripts, 'No se encontró el script principal'
-          open('/tmp/dj-sebas-app.js', 'w', encoding='utf-8').write('\\n'.join(scripts))
+          open('/tmp/dj-sebas-app.js', 'w', encoding='utf-8').write('\n'.join(scripts))
           PY
           node --check /tmp/dj-sebas-app.js
       - name: Preparar archivos de la aplicación
