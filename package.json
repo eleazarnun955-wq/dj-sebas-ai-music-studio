@@ -1,8 +1,8 @@
 {
   "name": "dj-sebas-ai-music-studio",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "DJ SEBAS AI MUSIC STUDIO - mezclador local de audio",
+  "description": "DJ SEBAS AI MUSIC STUDIO PRO 2.0 - cabina DJ avanzada y mezclador local",
   "dependencies": {
     "@capacitor/android": "7.4.3",
     "@capacitor/core": "7.4.3"
