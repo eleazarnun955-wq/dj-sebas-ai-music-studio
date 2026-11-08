@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "DJ SEBAS AI MUSIC STUDIO",
-  "short_name": "DJ SEBAS MUSIC",
-  "description": "Mezcla y mashups de canciones locales",
+  "name": "DJ SEBAS AI MUSIC STUDIO PRO 3.0",
+  "short_name": "DJ SEBAS PRO 3.0",
+  "description": "Cabina DJ, remix automático y exportación MP3",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
