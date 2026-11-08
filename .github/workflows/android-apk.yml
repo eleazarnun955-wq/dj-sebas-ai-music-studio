@@ -54,11 +54,14 @@ jobs:
           npm install
           npx cap add android
           npx cap sync android
+          # Descarga la distribución mínima y amplía el tiempo de espera del wrapper.
+          sed -i 's/gradle-8.11.1-all.zip/gradle-8.11.1-bin.zip/' android/gradle/wrapper/gradle-wrapper.properties
+          echo 'networkTimeout=120000' >> android/gradle/wrapper/gradle-wrapper.properties
       - name: Construir APK de Android
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          for attempt in 1 2 3; do ./gradlew assembleDebug --no-daemon && break; if [ "$attempt" = 3 ]; then exit 1; fi; echo "Gradle falló; reintentando ($attempt/3)…"; sleep 10; done
       - name: Publicar APK descargable
         uses: actions/upload-artifact@v4
         with:
