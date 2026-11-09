@@ -101,12 +101,12 @@ jobs:
           handlers = set(re.findall(r"\$\('([^']+)'\)\.(?:onclick|addEventListener)", script))
           missing = sorted(x for x in handlers if x not in ids)
           assert not missing, f'Controles sin elemento HTML: {missing}'
-          button_ids = re.findall(r'<button\\b[^>]*\\bid="([^"]+)"', html)
+          button_ids = re.findall(r'<button\b[^>]*\bid="([^"]+)"', html)
           unwired = sorted(set(button_ids) - handlers)
           assert not unwired, f'Botones sin acción: {unwired}'
           assert 'DJ SEBAS' in html and 'PRO 3.0' in html
           assert 'lame.min.js' in html
-          print(f'Validación OK: {len(ids)} IDs y {len(buttons)} botones revisados.')
+          print(f'Validación OK: {len(ids)} IDs y {len(button_ids)} botones revisados.')
           PY
       - name: Construir APK
         working-directory: android
