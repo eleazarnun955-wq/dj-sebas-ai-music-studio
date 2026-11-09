@@ -162,8 +162,8 @@ function encodeMix20Crossfade(encoder,parts,prevLeft,prevRight,prevStart,nextLef
   const encoded=encoder.encodeBuffer(l,r);if(encoded.length)parts.push(new Uint8Array(encoded));
  }
 }
-function masterMix20InPlace(left,right,mode){
- const threshold=mode==='strong'?.24:mode==='soft'?.62:.42,ratio=mode==='strong'?5:mode==='soft'?2:3.5,release=Math.exp(-1/(.18*44100));let envelope=0;
+function masterMix20InPlace(left,right,mode,rate){
+ const threshold=mode==='strong'?.24:mode==='soft'?.62:.42,ratio=mode==='strong'?5:mode==='soft'?2:3.5,release=Math.exp(-1/(.18*rate));let envelope=0;
  for(let i=0;i<left.length;i++){
   const peak=Math.max(Math.abs(left[i]),Math.abs(right[i]));envelope=Math.max(peak,envelope*release);
   let gain=1;if(envelope>threshold){const target=threshold+(envelope-threshold)/ratio;gain=target/envelope;}
@@ -180,17 +180,17 @@ async function createTwentySongMix(){
   let decoded=null,left=null,right=null;
   try{
    decoded=await getCtx().decodeAudioData(await tracks[i].file.arrayBuffer());
-   left=decoded.getChannelData(0);right=decoded.numberOfChannels>1?decoded.getChannelData(1):decoded.getChannelData(0);
+   left=decoded.getChannelData(0);right=decoded.numberOfChannels>1?decoded.getChannelData(1):new Float32Array(left);
    if(right===left)right=left;
    const frames=left.length;if(frames<rate)throw new Error('La canción '+tracks[i].file.name+' dura menos de un segundo.');
-   masterMix20InPlace(left,right,$('masterMode').value);
+   masterMix20InPlace(left,right,$('masterMode').value,rate);
    if(pending){
     const fadeIn=Math.min(pending.holdFrames,Math.floor(frames/3));
     if(fadeIn<1)throw new Error('Una canción es demasiado corta para hacer la transición.');
     const extra=pending.holdFrames-fadeIn;
     if(extra>0)encodeMix20Range(encoder,parts,pending.left,pending.right,0,extra);
     encodeMix20Crossfade(encoder,parts,pending.left,pending.right,extra,left,right,fadeIn);
-    totalFrames+=fadeIn;
+    totalFrames+=pending.holdFrames;
     const holdFrames=i<tracks.length-1?Math.min(Math.floor(fadeSeconds*rate),Math.floor(frames/3)):0;
     const bodyEnd=frames-holdFrames;
     if(bodyEnd>fadeIn)encodeMix20Range(encoder,parts,left,right,fadeIn,bodyEnd-fadeIn);
