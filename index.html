@@ -61,12 +61,27 @@ async function encodeMp3(audioBuffer){
 }
 async function saveMp3ToPhone(blob,name){
  const bridge=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.MusicExport;
- if(bridge&&bridge.saveMp3){
-  const bytes=await blob.arrayBuffer();let binary='';const arr=new Uint8Array(bytes);
-  for(let i=0;i<arr.length;i+=0x8000)binary+=String.fromCharCode(...arr.subarray(i,Math.min(i+0x8000,arr.length)));
-  const base64=btoa(binary);return await bridge.saveMp3({fileName:name,base64});
+ if(bridge&&bridge.beginMp3&&bridge.writeMp3Chunk&&bridge.finishMp3){
+  let started=false;
+  try{
+   await bridge.beginMp3({fileName:name});started=true;
+   const chunkSize=192*1024,total=Math.ceil(blob.size/chunkSize);
+   for(let offset=0,index=0;offset<blob.size;offset+=chunkSize,index++){
+    const bytes=new Uint8Array(await blob.slice(offset,Math.min(offset+chunkSize,blob.size)).arrayBuffer());
+    let binary='';for(let i=0;i<bytes.length;i+=0x6000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x6000,bytes.length)));
+    await bridge.writeMp3Chunk({base64:btoa(binary)});
+    if(index%8===0){say('Guardando MP3 en el teléfono… '+Math.min(99,Math.round((index+1)/total*100))+'%');}
+   }
+   return await bridge.finishMp3();
+  }catch(error){if(started&&bridge.cancelMp3){try{await bridge.cancelMp3();}catch(_){}}throw error;}
  }
- if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())throw new Error('No está disponible el módulo de guardado nativo. No se descargó el archivo.');const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+ if(bridge&&bridge.saveMp3){
+  const bytes=new Uint8Array(await blob.arrayBuffer());let binary='';
+  for(let i=0;i<bytes.length;i+=0x6000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x6000,bytes.length)));
+  return await bridge.saveMp3({fileName:name,base64:btoa(binary)});
+ }
+ if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())throw new Error('No está disponible el módulo de guardado nativo. No se descargó el archivo.');
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
  return {fallbackDownload:true};
 }
 $('download').onclick=async()=>{
