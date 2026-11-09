@@ -75,7 +75,10 @@ async function encodeMp3(audioBuffer){
  return new Blob(parts,{type:'audio/mpeg'});
 }
 async function saveMp3ToPhone(blob,name){
- const bridge=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.MusicExport;
+ const cap=window.Capacitor;
+ let bridge=cap&&cap.Plugins&&cap.Plugins.MusicExport;
+ // Capacitor 7 registra los plugins nativos mediante registerPlugin; no siempre los expone automáticamente en Plugins.
+ if(!bridge&&cap&&typeof cap.registerPlugin==='function')bridge=cap.registerPlugin('MusicExport');
  if(bridge&&bridge.beginMp3&&bridge.writeMp3Chunk&&bridge.finishMp3){
   let started=false;
   try{
