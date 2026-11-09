@@ -22,12 +22,27 @@
 <p class="hint">El detector analiza el pulso del audio y propone un BPM; puedes corregirlo manualmente. La sincronización usa cambio de velocidad (también cambia el tono), como el pitch de una cabina DJ.</p>
 </section>
 <div class="grid" style="margin-top:12px"><div class="field"><label for="fxMode">Efecto DJ</label><select id="fxMode" class="field"><option value="none">Sin efecto</option><option value="echo">Echo / Delay</option><option value="room">Ambiente / Room</option></select></div><div class="field"><label for="masterMode">Masterización</label><select id="masterMode" class="field"><option value="balanced">Balanceada</option><option value="soft">Suave</option><option value="strong">Fuerte / Club</option></select></div></div><p class="hint">Elige transición, mashup o reproducción consecutiva. Ajusta volúmenes, BPM, ecualización, efectos y masterización.</p><div class="actions"><button id="make" disabled>⚡ CREAR MEZCLA</button><button id="play" class="secondary" disabled>▶ Escuchar resultado</button><button id="stop" class="secondary" disabled>■ Detener</button></div><div class="meter"><i id="progress"></i></div><div id="status" class="status" role="status">Carga dos canciones para comenzar.</div></section>
-<section class="panel"><h2>🎧 Remix automático de una canción</h2><p class="hint">Carga una sola canción en CANCIÓN A y crea una versión DJ con ajuste de tempo, ecualización, compresión, filtro y eco final. No necesita IA, cuenta ni conexión.</p><div class="grid"><div class="field"><label for="autoStyle">Estilo del remix</label><select id="autoStyle"><option value="club">Club / Dance</option><option value="cumbia">Cumbia remix</option><option value="electro">Electrónica con eco</option><option value="clean">Remaster limpio</option></select></div><div class="field"><label for="autoBpm">BPM objetivo</label><select id="autoBpm"><option value="0">Conservar BPM original</option><option value="100">100 BPM</option><option value="110">110 BPM</option><option value="120" selected>120 BPM</option><option value="125">125 BPM</option><option value="130">130 BPM</option></select></div><div class="field"><label for="trimStart">Inicio (segundos)</label><input id="trimStart" type="number" min="0" value="0" step="0.5" style="width:100%;padding:10px;background:#101020;color:white;border:1px solid var(--line);border-radius:9px"></div><div class="field"><label for="trimEnd">Final (0 = canción completa)</label><input id="trimEnd" type="number" min="0" value="0" step="0.5" style="width:100%;padding:10px;background:#101020;color:white;border:1px solid var(--line);border-radius:9px"></div></div><div class="actions" style="margin-top:12px"><button id="autoRemix" disabled>🔥 CREAR REMIX AUTOMÁTICO</button></div><p class="hint">El remix trabaja con la canción completa o el fragmento indicado. Ajusta el BPM dentro de un margen seguro para evitar cambios extremos de velocidad.</p></section><section class="panel"><h2>🎚️ Mix completo · hasta 20 canciones</h2><p class="hint">Selecciona de 2 a 20 canciones de tu teléfono. Se procesan una por una en el orden de la lista, con transiciones suaves, nivelación y masterización. El resultado será un solo MP3 continuo. El mix admite hasta 60 minutos en total.</p><div class="track"><strong>LISTA DE CANCIONES (máximo 20)</strong><input id="mix20Files" type="file" accept="audio/*" multiple><div id="mix20List" class="status">Todavía no has agregado canciones.</div></div><div class="actions"><button id="mix20Btn" disabled>🎛️ CREAR MIX COMPLETO (HASTA 20)</button><button id="mix20Finish" disabled>🏁 MIX TERMINADO · GUARDAR MP3</button><button id="mix20Clear" class="secondary" disabled>Vaciar lista</button></div><audio id="mix20Preview" controls style="display:none;width:100%;margin-top:12px"></audio><p class="hint">Cada canción se procesa por separado para cuidar la memoria del teléfono. El MP3 final se guarda en Music/DJ SEBAS PRO 3.0. El tiempo depende de la duración y potencia del teléfono.</p></section><section class="panel"><h2>💾 Exporta tu mezcla</h2><div class="actions"><button id="download" disabled>⬇ DESCARGAR MP3 A MIS ARCHIVOS</button></div><p class="hint">El archivo se guarda como MP3 en Music/DJ SEBAS PRO 3.0, separado de tu música habitual. Para mixes largos, el procesamiento puede tardar; mantén espacio libre y no cierres la aplicación.</p></section>
+<section class="panel"><h2>🎧 Remix automático de una canción</h2><p class="hint">Carga una sola canción en CANCIÓN A y crea una versión DJ con ajuste de tempo, ecualización, compresión, filtro y eco final. No necesita IA, cuenta ni conexión.</p><div class="grid"><div class="field"><label for="autoStyle">Estilo del remix</label><select id="autoStyle"><option value="club">Club / Dance</option><option value="cumbia">Cumbia remix</option><option value="electro">Electrónica con eco</option><option value="clean">Remaster limpio</option></select></div><div class="field"><label for="autoBpm">BPM objetivo</label><select id="autoBpm"><option value="0">Conservar BPM original</option><option value="100">100 BPM</option><option value="110">110 BPM</option><option value="120" selected>120 BPM</option><option value="125">125 BPM</option><option value="130">130 BPM</option></select></div><div class="field"><label for="trimStart">Inicio (segundos)</label><input id="trimStart" type="number" min="0" value="0" step="0.5" style="width:100%;padding:10px;background:#101020;color:white;border:1px solid var(--line);border-radius:9px"></div><div class="field"><label for="trimEnd">Final (0 = canción completa)</label><input id="trimEnd" type="number" min="0" value="0" step="0.5" style="width:100%;padding:10px;background:#101020;color:white;border:1px solid var(--line);border-radius:9px"></div></div><div class="actions" style="margin-top:12px"><button id="autoRemix" disabled>🔥 CREAR REMIX AUTOMÁTICO</button></div><p class="hint">El remix trabaja con la canción completa o el fragmento indicado. Ajusta el BPM dentro de un margen seguro para evitar cambios extremos de velocidad.</p></section><section class="panel"><h2>🎚️ MIX TERMINADO · hasta 20 canciones</h2><p class="hint">Pulsa para elegir canciones de tu teléfono. Después se abrirá la mezcladora para agregar pistas y crear un solo MP3 automático.</p><input id="mix20Files" type="file" accept="audio/*" multiple hidden><button id="mix20Open" style="width:100%;font-size:17px;padding:18px">🎧 MIX TERMINADO · SELECCIONAR CANCIONES</button></section>
+<div id="mix20Studio" style="display:none;position:fixed;inset:0;z-index:9999;background:#080810;overflow:auto;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)">
+<div style="max-width:720px;margin:0 auto;padding:14px 0 34px">
+<div style="display:flex;align-items:center;gap:12px;margin:8px 0 20px"><button id="mix20Back" class="secondary">←</button><div style="font-size:22px;font-weight:900;flex:1">Mezcladora · MIX TERMINADO</div><span id="mix20Count" class="pill">0 / 20</span></div>
+<p class="hint">Las canciones se mezclarán en el orden mostrado. Pulsa + para agregar más pistas, hasta 20.</p>
+<div id="mix20List" class="status" style="min-height:120px;background:#11111c"></div>
+<button id="mix20Add" class="secondary" style="width:100%;margin-top:14px;padding:17px;font-size:16px">＋ AGREGAR AUDIO</button>
+<div class="panel" style="margin-top:18px">
+<div class="field"><label for="mix20Fade">Duración de transición</label><select id="mix20Fade" class="field"><option value="5">5 segundos</option><option value="8">8 segundos</option><option value="12" selected>12 segundos</option><option value="16">16 segundos</option><option value="20">20 segundos</option></select></div>
+<div class="field" style="margin-top:12px"><label for="mix20Master">Masterización</label><select id="mix20Master" class="field"><option value="balanced">Balanceada</option><option value="soft">Suave</option><option value="strong">Fuerte / Club</option></select></div>
+<div class="meter"><i id="progress"></i></div><div id="mix20Status" class="status">Agrega al menos 2 canciones para comenzar.</div>
+<button id="mix20Btn" style="width:100%;margin-top:14px;padding:19px;font-size:18px" disabled>⚡ MIX AUTOMÁTICO · CREAR MP3</button>
+<audio id="mix20Preview" controls style="display:none;width:100%;margin-top:12px"></audio>
+<button id="mix20Finish" class="secondary" style="display:none">Guardar MP3</button>
+<button id="mix20Clear" class="secondary" style="width:100%;margin-top:10px">Vaciar lista</button></div>
+<p class="hint">El MP3 se guarda en Music/DJ SEBAS PRO 3.0. Mantén la aplicación abierta durante el proceso.</p></div></div><section class="panel"><h2>💾 Exporta tu mezcla</h2><div class="actions"><button id="download" disabled>⬇ DESCARGAR MP3 A MIS ARCHIVOS</button></div><p class="hint">El archivo se guarda como MP3 en Music/DJ SEBAS PRO 3.0, separado de tu música habitual. Para mixes largos, el procesamiento puede tardar; mantén espacio libre y no cierres la aplicación.</p></section>
 <section class="panel"><h2>📲 Instalar en Android</h2><p class="hint">Cuando abras esta aplicación desde Chrome, toca el menú ⋮ y selecciona «Instalar aplicación» o «Agregar a pantalla principal». Después tendrás su icono como una app y podrá abrir su interfaz sin conexión tras la primera carga.</p></section>
 <footer>DJ SEBAS AI MUSIC STUDIO PRO 3.0 · Producciones Sebas · Cabina DJ avanzada</footer>
 </main><script>
 const $=id=>document.getElementById(id);let ctx=null,buffers=[null,null],result=null,source=null,rendering=false,mix20Tracks=[],mix20Blob=null,mix20Url=null,mix20Audio=null;
-function say(t){$('status').textContent=t}function setProgress(n){$('progress').style.width=n+'%'}
+function say(t){const s=$('status');if(s)s.textContent=t;const b=$('mix20Status');if(b)b.textContent=t}function setProgress(n){$('progress').style.width=n+'%'}
 function getCtx(){if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();return ctx}
 function fmt(s){return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')}
 async function load(i,file){if(!file)return;try{result=null;mix20Blob=null;if(mix20Url){URL.revokeObjectURL(mix20Url);mix20Url=null;}$('mix20Preview').style.display='none';$('play').disabled=true;$('download').disabled=true;$('stop').disabled=true;stop();say('Leyendo '+file.name+'…');const ab=await file.arrayBuffer();buffers[i]=await getCtx().decodeAudioData(ab);$('name'+(i?'B':'A')).textContent=file.name+' · '+fmt(buffers[i].duration);const url=URL.createObjectURL(file);$('audio'+(i?'B':'A')).src=url;$('make').disabled=!(buffers[0]&&buffers[1]);say('Canción '+(i?'B':'A')+' lista.');$('autoRemix').disabled=!buffers[0];}catch(e){buffers[i]=null;$('make').disabled=true;$('autoRemix').disabled=!buffers[0];$('name'+(i?'B':'A')).textContent='No se pudo cargar el archivo';say('No pude leer ese formato de audio. Prueba con MP3 o WAV. '+(e&&e.message?e.message:''));}}
@@ -134,7 +149,7 @@ function readMix20Duration(file){
 function invalidateMix20Output(){mix20Blob=null;result=null;if(mix20Url){URL.revokeObjectURL(mix20Url);mix20Url=null;}$('mix20Preview').pause();$('mix20Preview').removeAttribute('src');$('mix20Preview').style.display='none';$('download').disabled=true;$('play').disabled=true;$('stop').disabled=true;}
 function drawMix20List(){
  const root=$('mix20List');root.innerHTML='';
- if(!mix20Tracks.length){root.textContent='Todavía no has agregado canciones.';$('mix20Btn').disabled=true;$('mix20Finish').disabled=true;$('mix20Finish').textContent='🏁 MIX TERMINADO · GUARDAR MP3';$('mix20Clear').disabled=true;return;}
+ if(!mix20Tracks.length){root.textContent='Todavía no has agregado canciones. Pulsa + AGREGAR AUDIO.';$('mix20Btn').disabled=true;$('mix20Finish').disabled=true;$('mix20Finish').textContent='🏁 MIX TERMINADO · GUARDAR MP3';$('mix20Clear').disabled=true;return;}
  mix20Tracks.forEach((track,index)=>{
   const row=document.createElement('div');row.style.cssText='display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #343451';
   const name=document.createElement('span');name.textContent=(index+1)+'. '+track.file.name+' · '+fmt(track.duration);name.style.cssText='flex:1;min-width:130px';
@@ -143,9 +158,10 @@ function drawMix20List(){
   const del=document.createElement('button');del.className='secondary';del.textContent='Quitar';del.onclick=()=>{invalidateMix20Output();mix20Tracks.splice(index,1);drawMix20List();};
   row.append(name,up,down,del);root.append(row);
  });
- $('mix20Btn').disabled=mix20Tracks.length<2;$('mix20Finish').disabled=mix20Tracks.length<2;$('mix20Finish').textContent='🏁 MIX TERMINADO · GUARDAR MP3';$('mix20Clear').disabled=false;
+ $('mix20Btn').disabled=mix20Tracks.length<2;$('mix20Finish').disabled=mix20Tracks.length<2;$('mix20Finish').textContent='🏁 MIX TERMINADO · GUARDAR MP3';$('mix20Clear').disabled=false;$('mix20Count').textContent=mix20Tracks.length+' / 20';
  root.insertAdjacentHTML('beforeend','<div class="hint">'+mix20Tracks.length+' de 20 canciones · duración total aproximada: '+fmt(mix20Tracks.reduce((n,t)=>n+t.duration,0))+'</div>');
 }
+$('mix20Open').onclick=()=>{$('mix20Studio').style.display='block';if(!mix20Tracks.length)$('mix20Files').click();};$('mix20Back').onclick=()=>{$('mix20Studio').style.display='none';};$('mix20Add').onclick=()=>{$('mix20Files').click();};
 $('mix20Files').addEventListener('change',async e=>{
  const files=Array.from(e.target.files||[]);if(!files.length)return;
  const room=20-mix20Tracks.length;if(room<=0){say('La lista ya tiene 20 canciones.');e.target.value='';return;}
@@ -205,7 +221,7 @@ function masterMix20InPlace(left,right,mode,rate){
 }
 async function createTwentySongMix(){
  if(mix20Tracks.length<2||mix20Tracks.length>20)throw new Error('Agrega entre 2 y 20 canciones.');
- const tracks=mix20Tracks.slice(),fadeSeconds=Math.max(2,Math.min(16,Number($('duration').value)||12)),rate=getCtx().sampleRate;
+ const tracks=mix20Tracks.slice(),fadeSeconds=Math.max(2,Math.min(20,Number($('mix20Fade')?.value||$('duration').value)||12)),rate=getCtx().sampleRate;
  if(![44100,48000,32000,22050,24000,16000,12000,11025,8000].includes(rate))throw new Error('Frecuencia de audio no compatible con MP3: '+rate+' Hz.');
  const encoder=new lamejs.Mp3Encoder(2,rate,192),parts=[];let pending=null,totalFrames=0;
  for(let i=0;i<tracks.length;i++){
@@ -216,7 +232,7 @@ async function createTwentySongMix(){
    left=decoded.getChannelData(0);right=decoded.numberOfChannels>1?decoded.getChannelData(1):new Float32Array(left);
    if(right===left)right=left;
    const frames=left.length;if(frames<rate)throw new Error('La canción '+tracks[i].file.name+' dura menos de un segundo.');
-   masterMix20InPlace(left,right,$('masterMode').value,rate);
+   masterMix20InPlace(left,right,$('mix20Master')?.value||$('masterMode').value,rate);
    if(pending){
     const fadeIn=Math.min(pending.holdFrames,Math.floor(frames/3));
     if(fadeIn<1)throw new Error('Una canción es demasiado corta para hacer la transición.');
@@ -250,10 +266,18 @@ async function createTwentySongMix(){
  say('¡Mix completo listo! '+tracks.length+' canciones · '+fmt(total)+' · MP3 192 kbps. Escúchalo o guárdalo en tu carpeta DJ SEBAS.');
 }
 $('mix20Btn').onclick=async()=>{
- if(rendering)return;invalidateMix20Output();rendering=true;$('mix20Btn').disabled=true;$('mix20Files').disabled=true;$('mix20Clear').disabled=true;Array.from($('mix20List').querySelectorAll('button')).forEach(button=>button.disabled=true);$('download').disabled=true;$('play').disabled=true;
- try{await createTwentySongMix();}
- catch(err){mix20Blob=null;say('No se pudo crear el mix de 20 canciones: '+(err.message||err));}
- finally{rendering=false;$('mix20Files').disabled=false;drawMix20List();}
+ if(rendering||mix20Tracks.length<2)return;
+ invalidateMix20Output();rendering=true;$('mix20Btn').disabled=true;$('mix20Add').disabled=true;$('mix20Clear').disabled=true;Array.from($('mix20List').querySelectorAll('button')).forEach(button=>button.disabled=true);$('download').disabled=true;$('play').disabled=true;
+ try{
+  await createTwentySongMix();
+  if(!mix20Blob)throw new Error('No se generó el MP3 final.');
+  const fileName='DJ-SEBAS-PRO3-MIX-TERMINADO-'+new Date().toISOString().replace(/[:.]/g,'-')+'.mp3';
+  say('Mezcla lista. Guardando el MP3 en tu teléfono…');
+  const saved=await saveMp3ToPhone(mix20Blob,fileName);
+  if(saved&&saved.fallbackDownload)say('¡MIX AUTOMÁTICO TERMINADO! Se inició la descarga del MP3.');
+  else say('¡MIX AUTOMÁTICO TERMINADO Y GUARDADO! '+mix20Tracks.length+' canciones · Music/DJ SEBAS PRO 3.0');
+ }catch(err){mix20Blob=null;say('No se pudo crear o guardar el mix: '+(err.message||err));}
+ finally{rendering=false;$('mix20Add').disabled=false;$('mix20Clear').disabled=false;drawMix20List();}
 };
 
 function openMusicDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('dj-sebas-pro3-library',1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('tracks'))db.createObjectStore('tracks',{keyPath:'id'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
