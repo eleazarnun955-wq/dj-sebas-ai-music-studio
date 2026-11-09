@@ -32,7 +32,7 @@
 <div class="panel" style="margin-top:18px">
 <div class="field"><label for="mix20Fade">Duración de transición</label><select id="mix20Fade" class="field"><option value="5">5 segundos</option><option value="8">8 segundos</option><option value="12" selected>12 segundos</option><option value="16">16 segundos</option><option value="20">20 segundos</option></select></div>
 <div class="field" style="margin-top:12px"><label for="mix20Master">Masterización</label><select id="mix20Master" class="field"><option value="balanced">Balanceada</option><option value="soft">Suave</option><option value="strong">Fuerte / Club</option></select></div>
-<div class="meter"><i id="progress"></i></div><div id="mix20Status" class="status">Agrega al menos 2 canciones para comenzar.</div>
+<div class="meter"><i id="mix20Progress"></i></div><div id="mix20Status" class="status">Agrega al menos 2 canciones para comenzar.</div>
 <button id="mix20Btn" style="width:100%;margin-top:14px;padding:19px;font-size:18px" disabled>⚡ MIX AUTOMÁTICO · CREAR MP3</button>
 <audio id="mix20Preview" controls style="display:none;width:100%;margin-top:12px"></audio>
 <button id="mix20Finish" class="secondary" style="display:none">Guardar MP3</button>
@@ -42,7 +42,7 @@
 <footer>DJ SEBAS AI MUSIC STUDIO PRO 3.0 · Producciones Sebas · Cabina DJ avanzada</footer>
 </main><script>
 const $=id=>document.getElementById(id);let ctx=null,buffers=[null,null],result=null,source=null,rendering=false,mix20Tracks=[],mix20Blob=null,mix20Url=null,mix20Audio=null;
-function say(t){const s=$('status');if(s)s.textContent=t;const b=$('mix20Status');if(b)b.textContent=t}function setProgress(n){$('progress').style.width=n+'%'}
+function say(t){const s=$('status');if(s)s.textContent=t;const b=$('mix20Status');if(b)b.textContent=t}function setProgress(n){$('progress').style.width=n+'%';const p=$('mix20Progress');if(p)p.style.width=n+'%'}
 function getCtx(){if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();return ctx}
 function fmt(s){return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')}
 async function load(i,file){if(!file)return;try{result=null;mix20Blob=null;if(mix20Url){URL.revokeObjectURL(mix20Url);mix20Url=null;}$('mix20Preview').style.display='none';$('play').disabled=true;$('download').disabled=true;$('stop').disabled=true;stop();say('Leyendo '+file.name+'…');const ab=await file.arrayBuffer();buffers[i]=await getCtx().decodeAudioData(ab);$('name'+(i?'B':'A')).textContent=file.name+' · '+fmt(buffers[i].duration);const url=URL.createObjectURL(file);$('audio'+(i?'B':'A')).src=url;$('make').disabled=!(buffers[0]&&buffers[1]);say('Canción '+(i?'B':'A')+' lista.');$('autoRemix').disabled=!buffers[0];}catch(e){buffers[i]=null;$('make').disabled=true;$('autoRemix').disabled=!buffers[0];$('name'+(i?'B':'A')).textContent='No se pudo cargar el archivo';say('No pude leer ese formato de audio. Prueba con MP3 o WAV. '+(e&&e.message?e.message:''));}}
