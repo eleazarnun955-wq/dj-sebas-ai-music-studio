@@ -118,14 +118,14 @@ function readMix20Duration(file){
 }
 function invalidateMix20Output(){mix20Blob=null;result=null;if(mix20Url){URL.revokeObjectURL(mix20Url);mix20Url=null;}$('mix20Preview').pause();$('mix20Preview').removeAttribute('src');$('mix20Preview').style.display='none';$('download').disabled=true;$('play').disabled=true;$('stop').disabled=true;}
 function drawMix20List(){
- invalidateMix20Output();const root=$('mix20List');root.innerHTML='';
+ const root=$('mix20List');root.innerHTML='';
  if(!mix20Tracks.length){root.textContent='Todavía no has agregado canciones.';$('mix20Btn').disabled=true;$('mix20Clear').disabled=true;return;}
  mix20Tracks.forEach((track,index)=>{
   const row=document.createElement('div');row.style.cssText='display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #343451';
   const name=document.createElement('span');name.textContent=(index+1)+'. '+track.file.name+' · '+fmt(track.duration);name.style.cssText='flex:1;min-width:130px';
-  const up=document.createElement('button');up.className='secondary';up.textContent='↑';up.disabled=index===0;up.onclick=()=>{[mix20Tracks[index-1],mix20Tracks[index]]=[mix20Tracks[index],mix20Tracks[index-1]];drawMix20List();};
-  const down=document.createElement('button');down.className='secondary';down.textContent='↓';down.disabled=index===mix20Tracks.length-1;down.onclick=()=>{[mix20Tracks[index+1],mix20Tracks[index]]=[mix20Tracks[index],mix20Tracks[index+1]];drawMix20List();};
-  const del=document.createElement('button');del.className='secondary';del.textContent='Quitar';del.onclick=()=>{mix20Tracks.splice(index,1);drawMix20List();};
+  const up=document.createElement('button');up.className='secondary';up.textContent='↑';up.disabled=index===0;up.onclick=()=>{invalidateMix20Output();[mix20Tracks[index-1],mix20Tracks[index]]=[mix20Tracks[index],mix20Tracks[index-1]];drawMix20List();};
+  const down=document.createElement('button');down.className='secondary';down.textContent='↓';down.disabled=index===mix20Tracks.length-1;down.onclick=()=>{invalidateMix20Output();[mix20Tracks[index+1],mix20Tracks[index]]=[mix20Tracks[index],mix20Tracks[index+1]];drawMix20List();};
+  const del=document.createElement('button');del.className='secondary';del.textContent='Quitar';del.onclick=()=>{invalidateMix20Output();mix20Tracks.splice(index,1);drawMix20List();};
   row.append(name,up,down,del);root.append(row);
  });
  $('mix20Btn').disabled=mix20Tracks.length<2;$('mix20Clear').disabled=false;
@@ -134,7 +134,7 @@ function drawMix20List(){
 $('mix20Files').addEventListener('change',async e=>{
  const files=Array.from(e.target.files||[]);if(!files.length)return;
  const room=20-mix20Tracks.length;if(room<=0){say('La lista ya tiene 20 canciones.');e.target.value='';return;}
- const chosen=files.slice(0,room);say('Leyendo información de '+chosen.length+' canción(es)…');$('mix20Files').disabled=true;
+ const chosen=files.slice(0,room);say('Leyendo información de '+chosen.length+' canción(es)…');$('mix20Files').disabled=true;let invalidated=false;
  try{
   for(let i=0;i<chosen.length;i++){
    const file=chosen[i];if(!file.type.startsWith('audio/'))continue;
@@ -142,13 +142,14 @@ $('mix20Files').addEventListener('change',async e=>{
    if(duration>3600)throw new Error('Una canción supera el límite de 60 minutos.');
    const accumulated=mix20Tracks.reduce((sum,track)=>sum+track.duration,0);
    if(accumulated+duration>3600)throw new Error('El mix completo no puede superar los 60 minutos. Quita alguna canción o usa versiones más cortas.');
+   if(!invalidated){invalidateMix20Output();invalidated=true;}
    mix20Tracks.push({file,duration});drawMix20List();setProgress(Math.round((i+1)/chosen.length*100));
   }
   say('Lista preparada. Las canciones se decodificarán una por una para cuidar la memoria del teléfono.');
  }catch(err){say('No se pudo agregar una canción: '+(err.message||err));}
  finally{$('mix20Files').disabled=false;e.target.value='';drawMix20List();}
 });
-$('mix20Clear').onclick=()=>{mix20Tracks=[];drawMix20List();say('Lista del mix completo vaciada.');};
+$('mix20Clear').onclick=()=>{invalidateMix20Output();mix20Tracks=[];drawMix20List();say('Lista del mix completo vaciada.');};
 function encodeMix20Range(encoder,parts,left,right,start,count){
  const block=1152;
  for(let p=start;p<start+count;p+=block){
@@ -220,10 +221,10 @@ async function createTwentySongMix(){
  say('¡Mix completo listo! '+tracks.length+' canciones · '+fmt(total)+' · MP3 192 kbps. Escúchalo o guárdalo en tu carpeta DJ SEBAS.');
 }
 $('mix20Btn').onclick=async()=>{
- if(rendering)return;rendering=true;$('mix20Btn').disabled=true;$('download').disabled=true;$('play').disabled=true;
+ if(rendering)return;rendering=true;$('mix20Btn').disabled=true;$('mix20Files').disabled=true;$('mix20Clear').disabled=true;Array.from($('mix20List').querySelectorAll('button')).forEach(button=>button.disabled=true);$('download').disabled=true;$('play').disabled=true;
  try{await createTwentySongMix();}
  catch(err){mix20Blob=null;say('No se pudo crear el mix de 20 canciones: '+(err.message||err));}
- finally{rendering=false;$('mix20Btn').disabled=mix20Tracks.length<2;}
+ finally{rendering=false;$('mix20Files').disabled=false;drawMix20List();}
 };
 
 function openMusicDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('dj-sebas-pro3-library',1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('tracks'))db.createObjectStore('tracks',{keyPath:'id'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
