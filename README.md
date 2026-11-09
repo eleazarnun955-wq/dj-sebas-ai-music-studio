@@ -4,6 +4,7 @@ Aplicación Android independiente de PRO 2.0. Identificador propio: `com.producc
 
 ## Funciones incluidas
 - Mezcla local de dos pistas: crossfade, mashup superpuesto o reproducción A seguida de B.
+- Mix completo de 2 a 20 canciones: selección múltiple, reordenar/quitar pistas, transiciones suaves, masterización por bloques y exportación de un único MP3 continuo a 192 kbps.
 - Control de volumen independiente, ecualización de graves/medios/agudos y sincronización BPM aproximada.
 - Efectos Echo/Delay y Room, más compresión/masterización seleccionable.
 - Remix automático de una canción: perfiles Club, Cumbia, Electro y Limpio; recorte de inicio/final, tempo dentro de un margen limitado, EQ, filtro, compresión y eco.
