@@ -116,8 +116,9 @@ function readMix20Duration(file){
   audio.onerror=()=>finish(new Error('Formato no compatible o archivo dañado: '+file.name));audio.src=url;
  });
 }
+function invalidateMix20Output(){mix20Blob=null;result=null;if(mix20Url){URL.revokeObjectURL(mix20Url);mix20Url=null;}$('mix20Preview').pause();$('mix20Preview').removeAttribute('src');$('mix20Preview').style.display='none';$('download').disabled=true;$('play').disabled=true;$('stop').disabled=true;}
 function drawMix20List(){
- const root=$('mix20List');root.innerHTML='';
+ invalidateMix20Output();const root=$('mix20List');root.innerHTML='';
  if(!mix20Tracks.length){root.textContent='Todavía no has agregado canciones.';$('mix20Btn').disabled=true;$('mix20Clear').disabled=true;return;}
  mix20Tracks.forEach((track,index)=>{
   const row=document.createElement('div');row.style.cssText='display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #343451';
@@ -147,7 +148,7 @@ $('mix20Files').addEventListener('change',async e=>{
  }catch(err){say('No se pudo agregar una canción: '+(err.message||err));}
  finally{$('mix20Files').disabled=false;e.target.value='';drawMix20List();}
 });
-$('mix20Clear').onclick=()=>{mix20Tracks=[];mix20Blob=null;if(mix20Url){URL.revokeObjectURL(mix20Url);mix20Url=null;}$('mix20Preview').pause();$('mix20Preview').removeAttribute('src');$('mix20Preview').style.display='none';drawMix20List();say('Lista del mix completo vaciada.');};
+$('mix20Clear').onclick=()=>{mix20Tracks=[];drawMix20List();say('Lista del mix completo vaciada.');};
 function encodeMix20Range(encoder,parts,left,right,start,count){
  const block=1152;
  for(let p=start;p<start+count;p+=block){
