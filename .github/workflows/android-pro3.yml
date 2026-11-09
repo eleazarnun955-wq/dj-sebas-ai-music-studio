@@ -101,9 +101,9 @@ jobs:
           handlers = set(re.findall(r"\$\('([^']+)'\)\.(?:onclick|addEventListener)", script))
           missing = sorted(x for x in handlers if x not in ids)
           assert not missing, f'Controles sin elemento HTML: {missing}'
-          buttons = re.findall(r'<button\b([^>]*)>', html)
-          inert = [b for b in buttons if 'id=' not in b and 'type="submit"' not in b]
-          assert not inert, f'Botones sin ID/control asociado: {inert}'
+          button_ids = re.findall(r'<button\\b[^>]*\\bid="([^"]+)"', html)
+          unwired = sorted(set(button_ids) - handlers)
+          assert not unwired, f'Botones sin acción: {unwired}'
           assert 'DJ SEBAS' in html and 'PRO 3.0' in html
           assert 'lame.min.js' in html
           print(f'Validación OK: {len(ids)} IDs y {len(buttons)} botones revisados.')
