@@ -1,4 +1,4 @@
-package com.produccionessebas.djsebasmusicstudiopro30;
+package com.produccionessebas.djsebasmusicstudiopro30v2;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
