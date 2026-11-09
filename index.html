@@ -152,17 +152,17 @@ $('mix20Files').addEventListener('change',async e=>{
 $('mix20Clear').onclick=()=>{invalidateMix20Output();mix20Tracks=[];drawMix20List();say('Lista del mix completo vaciada.');};
 $('mix20Finish').onclick=async()=>{
  if(rendering||mix20Tracks.length<2)return;
- const btn=$('mix20Finish');rendering=true;btn.disabled=true;$('mix20Btn').disabled=true;$('mix20Files').disabled=true;$('mix20Clear').disabled=true;Array.from($('mix20List').querySelectorAll('button')).forEach(button=>button.disabled=true);$('download').disabled=true;$('play').disabled=true;
+ const btn=$('mix20Finish');let mixSaved=false;rendering=true;btn.disabled=true;$('mix20Btn').disabled=true;$('mix20Files').disabled=true;$('mix20Clear').disabled=true;Array.from($('mix20List').querySelectorAll('button')).forEach(button=>button.disabled=true);$('download').disabled=true;$('play').disabled=true;
  try{
   if(!mix20Blob)await createTwentySongMix();
   if(!mix20Blob)throw new Error('No se generó el audio final.');
   const fileName='DJ-SEBAS-PRO3-MIX-TERMINADO-'+new Date().toISOString().replace(/[:.]/g,'-')+'.mp3';
   say('Mix terminado. Guardando el MP3 en Music / DJ SEBAS PRO 3.0…');
   const saved=await saveMp3ToPhone(mix20Blob,fileName);
-  if(saved&&saved.fallbackDownload){say('¡MIX TERMINADO! Se inició la descarga del MP3.');btn.textContent='🏁 MIX TERMINADO ✓';btn.disabled=true;}
-  else{say('¡MIX TERMINADO Y GUARDADO! '+mix20Tracks.length+' canciones · MP3 192 kbps · Music / DJ SEBAS PRO 3.0.');btn.textContent='🏁 MIX TERMINADO ✓';btn.disabled=true;}
+  if(saved&&saved.fallbackDownload){say('¡MIX TERMINADO! Se inició la descarga del MP3.');mixSaved=true;}
+  else{say('¡MIX TERMINADO Y GUARDADO! '+mix20Tracks.length+' canciones · MP3 192 kbps · Music / DJ SEBAS PRO 3.0.');mixSaved=true;}
  }catch(err){say('No se pudo terminar/guardar el mix: '+(err.message||err));btn.disabled=false;}
- finally{rendering=false;$('mix20Files').disabled=false;$('mix20Btn').disabled=mix20Tracks.length<2;$('mix20Clear').disabled=mix20Tracks.length===0;Array.from($('mix20List').querySelectorAll('button')).forEach(button=>button.disabled=false);}
+ finally{rendering=false;$('mix20Files').disabled=false;drawMix20List();if(mixSaved){btn.textContent='🏁 MIX TERMINADO ✓';btn.disabled=true;}}
 };
 function encodeMix20Range(encoder,parts,left,right,start,count){
  const block=1152;
