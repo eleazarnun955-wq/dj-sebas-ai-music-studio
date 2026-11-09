@@ -80,9 +80,9 @@ jobs:
           with open("android/app/src/main/res/values/ic_launcher_background.xml","w") as f:
               f.write('<resources><color name="ic_launcher_background">#090914</color></resources>')
           PY
-          mkdir -p android/app/src/main/java/com/produccionessebas/djsebasmusicstudiopro30v3
-          cp android-native/MusicExportPlugin.java android/app/src/main/java/com/produccionessebas/djsebasmusicstudiopro30v3/
-          cp android-native/MainActivity.java android/app/src/main/java/com/produccionessebas/djsebasmusicstudiopro30v3/
+          mkdir -p android/app/src/main/java/com/produccionessebas/djsebasmusicstudiopro30v4
+          cp android-native/MusicExportPlugin.java android/app/src/main/java/com/produccionessebas/djsebasmusicstudiopro30v4/
+          cp android-native/MainActivity.java android/app/src/main/java/com/produccionessebas/djsebasmusicstudiopro30v4/
           sed -i 's/gradle-8.11.1-all.zip/gradle-8.11.1-bin.zip/' android/gradle/wrapper/gradle-wrapper.properties
           sed -i 's#services.gradle.org/distributions/#downloads.gradle.org/distributions/#' android/gradle/wrapper/gradle-wrapper.properties
           echo 'networkTimeout=120000' >> android/gradle/wrapper/gradle-wrapper.properties
