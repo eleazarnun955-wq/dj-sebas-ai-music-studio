@@ -108,68 +108,110 @@ $('autoRemix').onclick=async()=>{
 };
 
 
+function readMix20Duration(file){
+ return new Promise((resolve,reject)=>{
+  const url=URL.createObjectURL(file),audio=new Audio();let settled=false;
+  const finish=(err,value)=>{if(settled)return;settled=true;audio.removeAttribute('src');audio.load();URL.revokeObjectURL(url);err?reject(err):resolve(value);};
+  audio.preload='metadata';audio.onloadedmetadata=()=>Number.isFinite(audio.duration)&&audio.duration>0?finish(null,audio.duration):finish(new Error('No se pudo leer la duración de '+file.name));
+  audio.onerror=()=>finish(new Error('Formato no compatible o archivo dañado: '+file.name));audio.src=url;
+ });
+}
 function drawMix20List(){
  const root=$('mix20List');root.innerHTML='';
  if(!mix20Tracks.length){root.textContent='Todavía no has agregado canciones.';$('mix20Btn').disabled=true;$('mix20Clear').disabled=true;return;}
  mix20Tracks.forEach((track,index)=>{
   const row=document.createElement('div');row.style.cssText='display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #343451';
-  const name=document.createElement('span');name.textContent=(index+1)+'. '+track.file.name+' · '+fmt(track.buffer.duration);name.style.cssText='flex:1;min-width:130px';
+  const name=document.createElement('span');name.textContent=(index+1)+'. '+track.file.name+' · '+fmt(track.duration);name.style.cssText='flex:1;min-width:130px';
   const up=document.createElement('button');up.className='secondary';up.textContent='↑';up.disabled=index===0;up.onclick=()=>{[mix20Tracks[index-1],mix20Tracks[index]]=[mix20Tracks[index],mix20Tracks[index-1]];drawMix20List();};
   const down=document.createElement('button');down.className='secondary';down.textContent='↓';down.disabled=index===mix20Tracks.length-1;down.onclick=()=>{[mix20Tracks[index+1],mix20Tracks[index]]=[mix20Tracks[index],mix20Tracks[index+1]];drawMix20List();};
   const del=document.createElement('button');del.className='secondary';del.textContent='Quitar';del.onclick=()=>{mix20Tracks.splice(index,1);drawMix20List();};
   row.append(name,up,down,del);root.append(row);
  });
  $('mix20Btn').disabled=mix20Tracks.length<2;$('mix20Clear').disabled=false;
- root.insertAdjacentHTML('beforeend','<div class="hint">'+mix20Tracks.length+' de 20 canciones · duración total antes de transiciones: '+fmt(mix20Tracks.reduce((n,t)=>n+t.buffer.duration,0))+'</div>');
+ root.insertAdjacentHTML('beforeend','<div class="hint">'+mix20Tracks.length+' de 20 canciones · duración total aproximada: '+fmt(mix20Tracks.reduce((n,t)=>n+t.duration,0))+'</div>');
 }
 $('mix20Files').addEventListener('change',async e=>{
  const files=Array.from(e.target.files||[]);if(!files.length)return;
  const room=20-mix20Tracks.length;if(room<=0){say('La lista ya tiene 20 canciones.');e.target.value='';return;}
- const chosen=files.slice(0,room);say('Cargando '+chosen.length+' canción(es) para el mix…');
- $('mix20Files').disabled=true;
+ const chosen=files.slice(0,room);say('Leyendo información de '+chosen.length+' canción(es)…');$('mix20Files').disabled=true;
  try{
   for(let i=0;i<chosen.length;i++){
    const file=chosen[i];if(!file.type.startsWith('audio/'))continue;
-   const ab=await file.arrayBuffer();const buffer=await getCtx().decodeAudioData(ab);
-   mix20Tracks.push({file,buffer});
-   drawMix20List();setProgress(Math.round((i+1)/chosen.length*100));
+   const duration=await readMix20Duration(file);
+   if(duration>3600)throw new Error('Una canción supera el límite de 60 minutos.');
+   mix20Tracks.push({file,duration});drawMix20List();setProgress(Math.round((i+1)/chosen.length*100));
   }
-  say('Lista preparada: '+mix20Tracks.length+' canción(es). Puedes cambiar el orden antes de crear el mix.');
- }catch(err){say('No se pudo cargar una canción: '+(err.message||err));}
+  say('Lista preparada. Las canciones se decodificarán una por una para cuidar la memoria del teléfono.');
+ }catch(err){say('No se pudo agregar una canción: '+(err.message||err));}
  finally{$('mix20Files').disabled=false;e.target.value='';drawMix20List();}
 });
 $('mix20Clear').onclick=()=>{mix20Tracks=[];mix20Blob=null;if(mix20Url){URL.revokeObjectURL(mix20Url);mix20Url=null;}$('mix20Preview').pause();$('mix20Preview').removeAttribute('src');$('mix20Preview').style.display='none';drawMix20List();say('Lista del mix completo vaciada.');};
+function encodeMix20Range(encoder,parts,left,right,start,count){
+ const block=1152;
+ for(let p=start;p<start+count;p+=block){
+  const n=Math.min(block,start+count-p),l=new Int16Array(n),r=new Int16Array(n);
+  for(let j=0;j<n;j++){l[j]=Math.max(-32768,Math.min(32767,left[p+j]*32767));r[j]=Math.max(-32768,Math.min(32767,right[p+j]*32767));}
+  const encoded=encoder.encodeBuffer(l,r);if(encoded.length)parts.push(new Uint8Array(encoded));
+ }
+}
+function encodeMix20Crossfade(encoder,parts,prevLeft,prevRight,prevStart,nextLeft,nextRight,count){
+ const block=1152;
+ for(let p=0;p<count;p+=block){
+  const n=Math.min(block,count-p),l=new Int16Array(n),r=new Int16Array(n);
+  for(let j=0;j<n;j++){const t=count<=1?1:(p+j)/(count-1),oldGain=1-t,newGain=t;l[j]=Math.max(-32768,Math.min(32767,(prevLeft[prevStart+p+j]*oldGain+nextLeft[p+j]*newGain)*32767));r[j]=Math.max(-32768,Math.min(32767,(prevRight[prevStart+p+j]*oldGain+nextRight[p+j]*newGain)*32767));}
+  const encoded=encoder.encodeBuffer(l,r);if(encoded.length)parts.push(new Uint8Array(encoded));
+ }
+}
+function masterMix20InPlace(left,right,mode){
+ const threshold=mode==='strong'?.24:mode==='soft'?.62:.42,ratio=mode==='strong'?5:mode==='soft'?2:3.5,release=Math.exp(-1/(.18*44100));let envelope=0;
+ for(let i=0;i<left.length;i++){
+  const peak=Math.max(Math.abs(left[i]),Math.abs(right[i]));envelope=Math.max(peak,envelope*release);
+  let gain=1;if(envelope>threshold){const target=threshold+(envelope-threshold)/ratio;gain=target/envelope;}
+  left[i]*=gain;right[i]*=gain;
+ }
+}
 async function createTwentySongMix(){
  if(mix20Tracks.length<2||mix20Tracks.length>20)throw new Error('Agrega entre 2 y 20 canciones.');
- const tracks=mix20Tracks.slice(),fade=Math.max(2,Math.min(16,Number($('duration').value)||12)),rate=44100,mastering=$('masterMode').value;
- const offsets=[];let total=0;
- for(let i=0;i<tracks.length;i++){offsets.push(total);total+=tracks[i].buffer.duration-(i<tracks.length-1?Math.min(fade,tracks[i].buffer.duration/3,tracks[i+1].buffer.duration/3):0);}
- if(total<=0||total>3600)throw new Error('La duración del mix debe ser menor de 60 minutos.');
- const encoder=new lamejs.Mp3Encoder(2,rate,192),parts=[],chunkSeconds=30,totalChunks=Math.ceil(total/chunkSeconds);
- for(let chunkIndex=0;chunkIndex<totalChunks;chunkIndex++){
-  const chunkStart=chunkIndex*chunkSeconds,chunkDuration=Math.min(chunkSeconds,total-chunkStart),frames=Math.ceil(chunkDuration*rate);
-  const off=new OfflineAudioContext(2,frames,rate);
-  const comp=off.createDynamicsCompressor();comp.threshold.value=mastering==='strong'?-12:mastering==='soft'?-4:-8;comp.knee.value=10;comp.ratio.value=mastering==='strong'?5:mastering==='soft'?2:3.5;comp.attack.value=.004;comp.release.value=.2;comp.connect(off.destination);
-  for(let i=0;i<tracks.length;i++){
-   const track=tracks[i],buf=track.buffer,start=offsets[i],end=start+buf.duration;
-   const segStart=Math.max(start,chunkStart),segEnd=Math.min(end,chunkStart+chunkDuration);if(segEnd<=segStart)continue;
-   const localStart=segStart-chunkStart,sourceOffset=segStart-start,segDur=segEnd-segStart;
-   const src=off.createBufferSource();src.buffer=buf;
-   const gain=off.createGain();const fadeIn=i>0?Math.min(fade,buf.duration/3,tracks[i-1].buffer.duration/3):0;
-   const fadeOut=i<tracks.length-1?Math.min(fade,buf.duration/3,tracks[i+1].buffer.duration/3):0;
-   const fadeInEnd=start+fadeIn,fadeOutStart=end-fadeOut;
-   const gStart=localStart,gEnd=localStart+segDur;
-   gain.gain.setValueAtTime(1,gStart);
-   if(fadeIn>0&&segStart<fadeInEnd&&segEnd>start){const a=Math.max(segStart,start),b=Math.min(segEnd,fadeInEnd);gain.gain.setValueAtTime(Math.max(0,(a-start)/fadeIn),a-chunkStart);gain.gain.linearRampToValueAtTime(Math.min(1,(b-start)/fadeIn),b-chunkStart);}
-   if(fadeOut>0&&segEnd>fadeOutStart){const a=Math.max(segStart,fadeOutStart);gain.gain.setValueAtTime(Math.max(0,1-(a-fadeOutStart)/fadeOut),a-chunkStart);gain.gain.linearRampToValueAtTime(0,gEnd);}
-   src.connect(gain);gain.connect(comp);src.start(localStart,sourceOffset,segDur);
+ const tracks=mix20Tracks.slice(),fadeSeconds=Math.max(2,Math.min(16,Number($('duration').value)||12)),rate=getCtx().sampleRate;
+ if(![44100,48000,32000,22050,24000,16000,12000,11025,8000].includes(rate))throw new Error('Frecuencia de audio no compatible con MP3: '+rate+' Hz.');
+ const encoder=new lamejs.Mp3Encoder(2,rate,192),parts=[];let pending=null,totalFrames=0;
+ for(let i=0;i<tracks.length;i++){
+  say('Procesando canción '+(i+1)+' de '+tracks.length+'…');setProgress(Math.round(i/tracks.length*90));
+  let decoded=null,left=null,right=null;
+  try{
+   decoded=await getCtx().decodeAudioData(await tracks[i].file.arrayBuffer());
+   left=decoded.getChannelData(0);right=decoded.numberOfChannels>1?decoded.getChannelData(1):decoded.getChannelData(0);
+   if(right===left)right=left;
+   const frames=left.length;if(frames<rate)throw new Error('La canción '+tracks[i].file.name+' dura menos de un segundo.');
+   masterMix20InPlace(left,right,$('masterMode').value);
+   if(pending){
+    const fadeIn=Math.min(pending.holdFrames,Math.floor(frames/3));
+    if(fadeIn<1)throw new Error('Una canción es demasiado corta para hacer la transición.');
+    const extra=pending.holdFrames-fadeIn;
+    if(extra>0)encodeMix20Range(encoder,parts,pending.left,pending.right,0,extra);
+    encodeMix20Crossfade(encoder,parts,pending.left,pending.right,extra,left,right,fadeIn);
+    totalFrames+=fadeIn;
+    const holdFrames=i<tracks.length-1?Math.min(Math.floor(fadeSeconds*rate),Math.floor(frames/3)):0;
+    const bodyEnd=frames-holdFrames;
+    if(bodyEnd>fadeIn)encodeMix20Range(encoder,parts,left,right,fadeIn,bodyEnd-fadeIn);
+    totalFrames+=Math.max(0,bodyEnd-fadeIn);
+    pending=holdFrames?{left:left.slice(bodyEnd),right:right.slice(bodyEnd),holdFrames}:null;
+   }else{
+    const holdFrames=Math.min(Math.floor(fadeSeconds*rate),Math.floor(frames/3));
+    const bodyEnd=i<tracks.length-1?frames-holdFrames:frames;
+    if(bodyEnd>0)encodeMix20Range(encoder,parts,left,right,0,bodyEnd);
+    totalFrames+=bodyEnd;
+    pending=holdFrames?{left:left.slice(bodyEnd),right:right.slice(bodyEnd),holdFrames}:null;
+   }
+  }finally{
+   decoded=null;left=null;right=null;
   }
-  const rendered=await off.startRendering(),left=rendered.getChannelData(0),right=rendered.getChannelData(1),block=1152;
-  for(let p=0;p<left.length;p+=block){const n=Math.min(block,left.length-p),l=new Int16Array(n),r=new Int16Array(n);for(let j=0;j<n;j++){l[j]=Math.max(-32768,Math.min(32767,left[p+j]*32767));r[j]=Math.max(-32768,Math.min(32767,right[p+j]*32767));}const encoded=encoder.encodeBuffer(l,r);if(encoded.length)parts.push(new Uint8Array(encoded));}
-  setProgress(Math.round((chunkIndex+1)/totalChunks*90));say('Mezclando y masterizando… bloque '+(chunkIndex+1)+' de '+totalChunks+'. No cierres la aplicación.');
+  if(i===tracks.length-1&&pending){encodeMix20Range(encoder,parts,pending.left,pending.right,0,pending.holdFrames);totalFrames+=pending.holdFrames;pending=null;}
+  await new Promise(resolve=>setTimeout(resolve,0));
  }
  const tail=encoder.flush();if(tail.length)parts.push(new Uint8Array(tail));
- mix20Blob=new Blob(parts,{type:'audio/mpeg'});mix20Url=URL.createObjectURL(mix20Blob);
+ const total=totalFrames/rate;if(total<=0)throw new Error('No se pudo generar audio de salida.');
+ mix20Blob=new Blob(parts,{type:'audio/mpeg'});if(mix20Url)URL.revokeObjectURL(mix20Url);mix20Url=URL.createObjectURL(mix20Blob);
  const preview=$('mix20Preview');preview.src=mix20Url;preview.style.display='block';result=null;
  $('play').disabled=false;$('download').disabled=false;$('stop').disabled=false;setProgress(100);
  say('¡Mix completo listo! '+tracks.length+' canciones · '+fmt(total)+' · MP3 192 kbps. Escúchalo o guárdalo en tu carpeta DJ SEBAS.');
