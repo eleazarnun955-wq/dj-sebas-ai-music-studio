@@ -11,6 +11,9 @@ on:
       - 'capacitor.config.json'
       - 'android-native/**'
       - '.github/workflows/android-pro3.yml'
+concurrency:
+  group: dj-sebas-pro3-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
