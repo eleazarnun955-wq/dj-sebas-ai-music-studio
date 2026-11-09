@@ -221,7 +221,7 @@ async function createTwentySongMix(){
  say('¡Mix completo listo! '+tracks.length+' canciones · '+fmt(total)+' · MP3 192 kbps. Escúchalo o guárdalo en tu carpeta DJ SEBAS.');
 }
 $('mix20Btn').onclick=async()=>{
- if(rendering)return;rendering=true;$('mix20Btn').disabled=true;$('mix20Files').disabled=true;$('mix20Clear').disabled=true;Array.from($('mix20List').querySelectorAll('button')).forEach(button=>button.disabled=true);$('download').disabled=true;$('play').disabled=true;
+ if(rendering)return;invalidateMix20Output();rendering=true;$('mix20Btn').disabled=true;$('mix20Files').disabled=true;$('mix20Clear').disabled=true;Array.from($('mix20List').querySelectorAll('button')).forEach(button=>button.disabled=true);$('download').disabled=true;$('play').disabled=true;
  try{await createTwentySongMix();}
  catch(err){mix20Blob=null;say('No se pudo crear el mix de 20 canciones: '+(err.message||err));}
  finally{rendering=false;$('mix20Files').disabled=false;drawMix20List();}
