@@ -42,6 +42,41 @@ jobs:
           cp node_modules/lamejs/lame.min.js www/lame.min.js
           npx cap add android
           npx cap sync android
+          python -m pip install --quiet pillow
+          python - <<'PY'
+          from PIL import Image, ImageDraw, ImageFont
+          import os
+          sizes = {"mdpi":108,"hdpi":162,"xhdpi":216,"xxhdpi":324,"xxxhdpi":432}
+          def draw_icon(size, foreground=False):
+              scale=size/512
+              im=Image.new("RGBA",(size,size),(0,0,0,0) if foreground else (9,9,20,255))
+              d=ImageDraw.Draw(im)
+              if not foreground:
+                  d.rounded_rectangle((0,0,size-1,size-1),radius=int(112*scale),fill=(9,9,20,255))
+              cx=cy=size/2
+              d.ellipse((cx-188*scale,cy-188*scale,cx+188*scale,cy+188*scale),fill=(12,12,27,255),outline=(183,92,235,255),width=max(2,int(18*scale)))
+              d.ellipse((cx-139*scale,cy-139*scale,cx+139*scale,cy+139*scale),outline=(118,98,142,255),width=max(1,int(5*scale)))
+              d.ellipse((cx-91*scale,cy-91*scale,cx+91*scale,cy+91*scale),outline=(118,98,142,255),width=max(1,int(5*scale)))
+              d.ellipse((cx-43*scale,cy-43*scale,cx+43*scale,cy+43*scale),fill=(34,211,238,255))
+              try: font=ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",int(100*scale))
+              except: font=ImageFont.load_default()
+              box=d.textbbox((0,0),"DS",font=font); d.text((cx-(box[2]-box[0])/2,cy-(box[3]-box[1])/2-box[1]),"DS",font=font,fill=(255,255,255,255))
+              return im
+          for density,size in sizes.items():
+              folder=f"android/app/src/main/res/mipmap-{density}"
+              os.makedirs(folder,exist_ok=True)
+              draw_icon(size).save(f"{folder}/ic_launcher.png")
+              draw_icon(size).save(f"{folder}/ic_launcher_round.png")
+              draw_icon(size,True).save(f"{folder}/ic_launcher_foreground.png")
+          folder="android/app/src/main/res/mipmap-anydpi-v26"
+          os.makedirs(folder,exist_ok=True)
+          for name in ("ic_launcher","ic_launcher_round"):
+              with open(f"{folder}/{name}.xml","w") as f:
+                  f.write('<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/ic_launcher_background"/><foreground android:drawable="@mipmap/ic_launcher_foreground"/></adaptive-icon>')
+          os.makedirs("android/app/src/main/res/values",exist_ok=True)
+          with open("android/app/src/main/res/values/ic_launcher_background.xml","w") as f:
+              f.write('<resources><color name="ic_launcher_background">#090914</color></resources>')
+          PY
           mkdir -p android/app/src/main/java/com/produccionessebas/djsebasmusicstudiopro30
           cp android-native/MusicExportPlugin.java android/app/src/main/java/com/produccionessebas/djsebasmusicstudiopro30/
           cp android-native/MainActivity.java android/app/src/main/java/com/produccionessebas/djsebasmusicstudiopro30/
@@ -58,6 +93,21 @@ jobs:
           open('/tmp/dj-sebas-app.js', 'w', encoding='utf-8').write('\\n'.join(scripts))
           PY
           node --check /tmp/dj-sebas-app.js
+          python - <<'PY'
+          import re
+          html = open('index.html', encoding='utf-8').read()
+          ids = set(re.findall(r'\\bid="([^"]+)"', html))
+          script = '\\n'.join(re.findall(r'<script>(.*?)</script>', html, re.S))
+          handlers = set(re.findall(r"\\$\\('([^']+)'\\)\\.(?:onclick|addEventListener)", script))
+          missing = sorted(x for x in handlers if x not in ids)
+          assert not missing, f'Controles sin elemento HTML: {missing}'
+          buttons = re.findall(r'<button\\b([^>]*)>', html)
+          inert = [b for b in buttons if 'id=' not in b and 'type="submit"' not in b]
+          assert not inert, f'Botones sin ID/control asociado: {inert}'
+          assert 'DJ SEBAS' in html and 'PRO 3.0' in html
+          assert 'lame.min.js' in html
+          print(f'Validación OK: {len(ids)} IDs y {len(buttons)} botones revisados.')
+          PY
       - name: Construir APK
         working-directory: android
         run: |
