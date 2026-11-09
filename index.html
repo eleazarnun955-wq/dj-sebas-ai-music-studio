@@ -139,6 +139,8 @@ $('mix20Files').addEventListener('change',async e=>{
    const file=chosen[i];if(!file.type.startsWith('audio/'))continue;
    const duration=await readMix20Duration(file);
    if(duration>3600)throw new Error('Una canción supera el límite de 60 minutos.');
+   const accumulated=mix20Tracks.reduce((sum,track)=>sum+track.duration,0);
+   if(accumulated+duration>3600)throw new Error('El mix completo no puede superar los 60 minutos. Quita alguna canción o usa versiones más cortas.');
    mix20Tracks.push({file,duration});drawMix20List();setProgress(Math.round((i+1)/chosen.length*100));
   }
   say('Lista preparada. Las canciones se decodificarán una por una para cuidar la memoria del teléfono.');
