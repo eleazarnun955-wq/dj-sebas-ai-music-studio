@@ -26,11 +26,11 @@
 <div id="mix20Studio" style="display:none;position:fixed;inset:0;z-index:9999;background:#080810;overflow:auto;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)">
 <div style="max-width:720px;margin:0 auto;padding:14px 0 34px">
 <div style="display:flex;align-items:center;gap:12px;margin:8px 0 20px"><button id="mix20Back" class="secondary">←</button><div style="font-size:22px;font-weight:900;flex:1">Mezcladora · MIX TERMINADO</div><span id="mix20Count" class="pill">0 / 20</span></div>
-<p class="hint">Las canciones se mezclarán en el orden mostrado. Pulsa + para agregar más pistas, hasta 20.</p>
+<p class="hint">Las canciones se mezclarán en el orden mostrado. La siguiente entra 4 segundos antes del final, con fundido cruzado y sincronización BPM. Se recortan silencios largos al inicio y al final. Pulsa + para agregar hasta 20 pistas.</p>
 <div id="mix20List" class="status" style="min-height:120px;background:#11111c"></div>
 <button id="mix20Add" class="secondary" style="width:100%;margin-top:14px;padding:17px;font-size:16px">＋ AGREGAR AUDIO</button>
 <div class="panel" style="margin-top:18px">
-<div class="field"><label for="mix20Fade">Duración de transición</label><select id="mix20Fade" class="field"><option value="5">5 segundos</option><option value="8">8 segundos</option><option value="12" selected>12 segundos</option><option value="16">16 segundos</option><option value="20">20 segundos</option></select></div><div class="field" style="margin-top:12px"><label><input id="syncMixBpm" type="checkbox" checked> Sincronizar BPM automáticamente con la primera canción</label><p class="hint">Ajusta la velocidad de las demás pistas para acercarlas al ritmo de la primera, dentro de un margen moderado.</p></div>
+<div class="field"><label for="mix20Fade">Duración de transición</label><select id="mix20Fade" class="field"><option value="4" selected>4 segundos · transición rápida</option><option value="6">6 segundos</option><option value="8">8 segundos</option><option value="12">12 segundos</option></select></div><div class="field" style="margin-top:12px"><label><input id="syncMixBpm" type="checkbox" checked> Sincronizar BPM automáticamente con la primera canción</label><p class="hint">Ajusta la velocidad de las demás pistas para acercarlas al ritmo de la primera, dentro de un margen moderado.</p></div>
 <div class="field" style="margin-top:12px"><label for="mix20Master">Masterización</label><select id="mix20Master" class="field"><option value="balanced">Balanceada</option><option value="soft">Suave</option><option value="strong">Fuerte / Club</option></select></div>
 <div class="meter"><i id="mix20Progress"></i></div><div id="mix20Status" class="status">Agrega al menos 2 canciones para comenzar.</div>
 <button id="mix20Btn" style="width:100%;margin-top:14px;padding:19px;font-size:18px" disabled>⚡ MIX AUTOMÁTICO · CREAR MP3</button>
@@ -224,6 +224,16 @@ function masterMix20InPlace(left,right,mode,rate){
   left[i]*=gain;right[i]*=gain;
  }
 }
+function trimMix20Silence(left,right,rate){
+ const windowSize=Math.max(1,Math.floor(rate*.1)),minSilence=Math.ceil(.8*rate/windowSize),pad=Math.floor(.2*rate),threshold=.002;
+ const count=Math.ceil(left.length/windowSize);let first=count,last=-1,leading=0,trailing=0;
+ for(let w=0;w<count;w++){const a=w*windowSize,b=Math.min(left.length,a+windowSize);let sum=0;for(let i=a;i<b;i++)sum+=Math.max(left[i]*left[i],right[i]*right[i]);const rms=Math.sqrt(sum/Math.max(1,b-a));if(rms>threshold){first=w;break;}leading++;}
+ for(let w=count-1;w>=0;w--){const a=w*windowSize,b=Math.min(left.length,a+windowSize);let sum=0;for(let i=a;i<b;i++)sum+=Math.max(left[i]*left[i],right[i]*right[i]);const rms=Math.sqrt(sum/Math.max(1,b-a));if(rms>threshold){last=w;break;}trailing++;}
+ let start=leading>=minSilence?Math.max(0,first*windowSize-pad):0;
+ let end=trailing>=minSilence?Math.min(left.length,(last+1)*windowSize+pad):left.length;
+ if(end-start<rate)throw new Error('La pista quedó demasiado corta después de retirar silencios.');
+ return start||end<left.length?{left:left.slice(start,end),right:right.slice(start,end)}:{left,right};
+}
 function adjustMix20Tempo(left,right,ratio){
  if(Math.abs(ratio-1)<0.015)return {left,right};
  const length=Math.max(1,Math.floor(left.length/ratio)),outL=new Float32Array(length),outR=new Float32Array(length);
@@ -236,7 +246,7 @@ function adjustMix20Tempo(left,right,ratio){
 }
 async function createTwentySongMix(){
  if(mix20Tracks.length<2||mix20Tracks.length>20)throw new Error('Agrega entre 2 y 20 canciones.');
- const tracks=mix20Tracks.slice(),fadeSeconds=Math.max(2,Math.min(20,Number($('mix20Fade')?.value||$('duration').value)||12)),rate=getCtx().sampleRate;
+ const tracks=mix20Tracks.slice(),fadeSeconds=Math.max(2,Math.min(12,Number($('mix20Fade')?.value||4)||4)),rate=getCtx().sampleRate;
  if(![44100,48000,32000,22050,24000,16000,12000,11025,8000].includes(rate))throw new Error('Frecuencia de audio no compatible con MP3: '+rate+' Hz.');
  const encoder=new lamejs.Mp3Encoder(2,rate,192),parts=[];let pending=null,totalFrames=0,targetBpm=0;
  for(let i=0;i<tracks.length;i++){
@@ -246,7 +256,8 @@ async function createTwentySongMix(){
    decoded=await getCtx().decodeAudioData(await tracks[i].file.arrayBuffer());
    left=decoded.getChannelData(0);right=decoded.numberOfChannels>1?decoded.getChannelData(1):new Float32Array(left);
    if(right===left)right=left;
-   const detectedBpm=detectBpm(decoded);if(!targetBpm)targetBpm=detectedBpm;
+   const trimmed=trimMix20Silence(left,right,rate);left=trimmed.left;right=trimmed.right;
+   const detectedBpm=detectBpm({getChannelData:()=>left,sampleRate:rate});if(!targetBpm)targetBpm=detectedBpm;
    let tempoRate=1;if($("syncMixBpm")?.checked&&targetBpm>0&&detectedBpm>0)tempoRate=Math.max(.85,Math.min(1.18,targetBpm/detectedBpm));
    if(Math.abs(tempoRate-1)>=.015){const adjusted=adjustMix20Tempo(left,right,tempoRate);left=adjusted.left;right=adjusted.right;}
    const frames=left.length;if(frames<rate)throw new Error('La canción '+tracks[i].file.name+' dura menos de un segundo.');
